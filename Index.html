@@ -4,12 +4,8 @@
 <meta charset="UTF-8">
 <title>Valination Ultimate</title>
 <link rel="stylesheet" href="style.css">
-<!--
-  Live site: https://valination.netlify.app/ (HTTPS). Netlify only hosts static files — it does not run the Node netplay server.
-  For online multiplayer, deploy your WebSocket server with TLS and point the game at wss://… using either:
-  (1) Uncomment one line below, or (2) In-game Settings → "Game server WebSocket URL" for each device.
-<script>window.NETPLAY_SERVER = "wss://YOUR-NETPLAY-HOST.example.com";</script>
--->
+<!-- Optional: override netplay URL for all builds (otherwise valination.netlify.app uses core/netplayConfig.js). -->
+<!-- <script>window.NETPLAY_SERVER = "wss://your-server.example.com";</script> -->
 </head>
 
 <body>
@@ -81,7 +77,7 @@
             <button id="btnShop" type="button">Shop</button>
             <button id="btnStats" type="button">Stats</button>
             <button id="btnControls" type="button">Controls</button>
-            <button id="btnSettings" type="button">Settings</button>
+            <button id="btnSettings" type="button" disabled>Settings</button>
             <button id="btnCredits" type="button" disabled>Credits</button>
         </div>
     </section>
@@ -170,33 +166,6 @@
         </div>
     </section>
 
-    <!-- SETTINGS -->
-    <section id="menuSettings" class="menuScreen" style="display:none;">
-        <h2 class="menuHeader">Settings</h2>
-        <h3 class="settingsSectionTitle">Online multiplayer</h3>
-        <p class="menuSubtitle settingsHelp">
-            Static hosting (GitHub Pages, Netlify, itch.io embedded web, etc.) serves your game over <strong>HTTPS</strong>.
-            Browsers then <strong>block</strong> plain <code>ws://</code> as mixed content — you need a public <code>wss://</code> WebSocket server (TLS).
-            There is no “allow connect” permission to toggle; use the URL field below (or <code>window.NETPLAY_SERVER</code>) with <strong>wss://your-server…</strong>.
-            For local testing only, open the HTML over <code>http://</code> so <code>ws://localhost:8080</code> can work.
-        </p>
-        <label class="menuLabel" for="settingNetplayServerUrl">Game server WebSocket URL (optional)</label>
-        <div class="settingsServerRow">
-            <input id="settingNetplayServerUrl" class="menuInput" type="text" maxlength="512" placeholder="e.g. ws://192.168.1.10:8080 or wss://your.host:443" autocomplete="off" />
-            <button type="button" id="btnClearNetplayServerUrl" class="secondary">Clear</button>
-        </div>
-        <p class="menuSubtitle settingsHelp">Leave blank to use <code>window.NETPLAY_SERVER</code> (if set) or the game default. Changing this applies the next time you open Online or start a match.</p>
-
-        <h3 class="settingsSectionTitle">In-match display</h3>
-        <label class="settingsToggleRow" for="settingShowOnlineWaitingOverlay">
-            <input id="settingShowOnlineWaitingOverlay" type="checkbox" />
-            <span>Show full-screen overlay while connecting / waiting for online match</span>
-        </label>
-        <div class="menuButtons">
-            <button id="btnSettingsBack" type="button" class="secondary">Back</button>
-        </div>
-    </section>
-
     <!-- STATS -->
     <section id="menuStats" class="menuScreen">
         <h2 class="menuHeader">Player Stats</h2>
@@ -230,7 +199,6 @@
 <script src="scenes/characterSelect.js"></script>
 <script src="scenes/shop.js"></script>
 <script src="scenes/controls.js"></script>
-<script src="scenes/settings.js"></script>
 <script src="scenes/stats.js"></script>
 <script src="scenes/fight.js"></script>
 <script src="scenes/results.js"></script>
