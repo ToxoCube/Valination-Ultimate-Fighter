@@ -1,0 +1,880 @@
+:root{
+    --font-sans:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+    --bg-deep:#06060a;
+    --surface-glass:rgba(18,20,34,0.78);
+    --surface-border:rgba(255,255,255,0.12);
+    --accent-win:#4ade80;
+    --accent-lose:#f87171;
+    --radius-lg:16px;
+    --radius-md:12px;
+    --shadow-elev:0 20px 56px rgba(0,0,0,0.55);
+   }
+
+   body {
+    margin:0;
+    background:var(--bg-deep);
+    overflow:hidden;
+    font-family:var(--font-sans);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+   }
+   
+   #game {
+    width:1920px;
+    height:1080px;
+    position:absolute;
+    transform-origin:top left;
+    transition:box-shadow .28s ease;
+   }
+   #game.lowHpVignette{
+    box-shadow:inset 0 0 min(220px, 30vw) rgba(100,16,36,0.45);
+   }
+   
+   canvas {
+    background:#0d0e14;
+    position:relative;
+    z-index:1;
+   }
+
+   .onlineWaitingOverlay{
+    position:absolute;
+    inset:0;
+    z-index:90;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:
+     radial-gradient(ellipse 80% 60% at 50% 40%, rgba(40,32,80,0.45) 0%, transparent 65%),
+     rgba(4,5,12,0.92);
+    backdrop-filter:blur(10px) saturate(130%);
+    color:#fff;
+    text-align:center;
+    padding:24px;
+    box-sizing:border-box;
+   }
+   .onlineWaitingTitle{
+    margin:0 0 12px 0;
+    font-size:clamp(34px,5vw,46px);
+    font-weight:800;
+    letter-spacing:0.06em;
+    color:#f4f6ff;
+    text-shadow:0 2px 24px rgba(0,0,0,0.5);
+   }
+   .onlineWaitingSub{
+    margin:0 0 20px 0;
+    font-size:17px;
+    color:#b8bdd4;
+    max-width:520px;
+    line-height:1.5;
+   }
+   .onlineCountdownBig{
+    font-size:clamp(72px,12vw,104px);
+    font-weight:900;
+    line-height:1;
+    color:#ffe082;
+    text-shadow:0 0 36px rgba(255,224,130,0.45), 0 4px 20px rgba(0,0,0,0.45);
+    min-height:100px;
+   }
+
+   /* Hit FX GIF must paint above canvas (player / enemy sprites) */
+   #attackHitMarkerOverlay{
+    z-index:25;
+   }
+   
+   #announcer {
+    position:absolute;
+    top:40px;
+    width:100%;
+    text-align:center;
+    font-size:clamp(28px,3.2vw,42px);
+    font-weight:800;
+    letter-spacing:0.04em;
+    color:#fff59d;
+    text-shadow:0 2px 0 rgba(0,0,0,0.55), 0 0 28px rgba(255,235,120,0.35);
+    pointer-events:none;
+   }
+   
+   #combo {
+    position:absolute;
+    top:100px;
+    right:50px;
+    font-size:clamp(22px,2.4vw,32px);
+    font-weight:800;
+    color:#f5f7ff;
+    text-shadow:0 2px 12px rgba(0,0,0,0.65), 0 0 20px rgba(180,200,255,0.25);
+    pointer-events:none;
+   }
+
+   /* Demo HP / energy bars (main menu preview; hidden during Fight scene) */
+   #bars{
+    position:absolute;
+    left:20px;
+    bottom:20px;
+    z-index:15;
+    width:min(320px, 42vw);
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    pointer-events:none;
+   }
+   #bars .bar{
+    height:13px;
+    border-radius:999px;
+    background:rgba(8,10,18,0.65);
+    border:1px solid rgba(255,255,255,0.12);
+    overflow:hidden;
+    box-shadow:inset 0 1px 3px rgba(0,0,0,0.35);
+   }
+   #bars .fill{
+    height:100%;
+    width:72%;
+    border-radius:999px;
+    background:linear-gradient(90deg, #22c55e, #4ade80);
+    box-shadow:0 0 12px rgba(74,222,128,0.35);
+    transition:width .12s ease-out;
+   }
+   #bars .fill.energy{
+    width:40%;
+    background:linear-gradient(90deg, #eab308, #fde047);
+    box-shadow:0 0 12px rgba(253,224,71,0.3);
+   }
+   
+   /* Above canvas (z-index 1) and in-game <img> overlays (e.g. hit marker z-index 25) */
+   #overlay {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:300;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    background:rgba(4,6,14,0.88);
+    backdrop-filter:blur(14px) saturate(140%);
+   }
+
+   .overlayCard{
+    width:min(700px, 94%);
+    padding:clamp(28px,4vw,48px) clamp(22px,3vw,40px);
+    border-radius:var(--radius-lg);
+    border:1px solid var(--surface-border);
+    background:linear-gradient(165deg, rgba(28,30,48,0.94) 0%, rgba(12,14,24,0.9) 100%);
+    box-shadow:var(--shadow-elev), inset 0 1px 0 rgba(255,255,255,0.06);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+   }
+
+   .resultTitle{
+    margin:0;
+    font-size:clamp(48px,8vw,76px);
+    font-weight:900;
+    letter-spacing:0.05em;
+    line-height:1.05;
+   }
+   .resultTitle--win{
+    color:var(--accent-win);
+    text-shadow:0 0 48px rgba(74,222,128,0.4), 0 4px 24px rgba(0,0,0,0.5);
+   }
+   .resultTitle--lose{
+    color:var(--accent-lose);
+    text-shadow:0 0 48px rgba(248,113,113,0.35), 0 4px 24px rgba(0,0,0,0.5);
+   }
+
+   #resultStats, .resultStats{
+    margin-top:14px;
+    color:#c8cce8;
+    font-size:19px;
+    text-align:center;
+    min-height:28px;
+    line-height:1.45;
+   }
+
+   #overlay .rematchPanel{
+    width:min(560px, 92%);
+    margin-top:14px;
+    text-align:center;
+   }
+   #overlay .rematchStatus{
+    margin:0 0 10px 0;
+    color:#e0e0e0;
+    font-size:17px;
+    line-height:1.4;
+    min-height:24px;
+   }
+
+   .menuOverlay{
+    position:fixed;
+    inset:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#050505 url("assets/valimenu.png") center center / cover no-repeat;
+    z-index:50;
+   }
+
+   /* Full-screen section: keep transparent so valimenu.png on .menuOverlay stays visible */
+   .menuScreen{
+    width:1920px;
+    height:1080px;
+    box-sizing:border-box;
+    padding:40px 48px;
+    border:none;
+    border-radius:0;
+    background:transparent;
+    backdrop-filter:none;
+    box-shadow:none;
+    display:none;
+    overflow:hidden;
+    text-align:center;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+   }
+
+   .menuScreen > *{
+    width:min(860px, 100%);
+    margin-left:0;
+    margin-right:0;
+   }
+
+   .menuTitle{
+    margin:0;
+    font-size:56px;
+    letter-spacing:1px;
+    color:#fff;
+    text-align:center;
+   }
+
+   .menuTitleLogo{
+    width:min(920px, 86vw);
+    max-height:220px;
+    object-fit:contain;
+    user-select:none;
+    margin:0 auto 8px auto;
+   }
+
+   .menuGameLogo{
+    width:min(720px, 72vw);
+    max-height:160px;
+    object-fit:contain;
+    user-select:none;
+    margin:0 auto 20px auto;
+   }
+
+   .menuSubtitle{
+    margin:10px 0 26px 0;
+    font-size:18px;
+    color:#bbb;
+    text-align:center;
+   }
+
+   .mainStats{
+    margin:10px auto 4px auto;
+    text-align:center;
+    color:#ddd;
+    font-size:16px;
+    line-height:1.4;
+    min-height:24px;
+   }
+
+   .menuHeader{
+    margin:0 0 18px 0;
+    font-size:34px;
+    color:#fff;
+    text-align:center;
+   }
+
+   .menuButtons{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-top:18px;
+   }
+
+   /* Main menu uses a vertical button stack */
+   #menuMain .menuButtons{
+    flex-direction:column;
+    align-items:center;
+    flex-wrap:nowrap;
+   }
+
+   #menuMain .menuButtons button{
+    width:240px;
+   }
+
+   button{
+    font-family:inherit;
+    font-size:17px;
+    font-weight:600;
+    padding:12px 20px;
+    border-radius:var(--radius-md);
+    border:1px solid rgba(255,255,255,0.2);
+    background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.08));
+    color:#f8f9ff;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+    transition:transform .08s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+   }
+   button:hover{
+    background:linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+    border-color:rgba(255,255,255,0.32);
+    box-shadow:0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+   }
+   button:active{ transform:translateY(1px); }
+   button:focus-visible{
+    outline:2px solid rgba(130,190,255,0.9);
+    outline-offset:3px;
+   }
+   button:disabled{ opacity:0.45; cursor:not-allowed; }
+   button.secondary{
+    background:rgba(255,255,255,0.06);
+    box-shadow:none;
+   }
+
+   .menuForm{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+    margin-top:10px;
+   }
+
+   .menuGrid{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap:18px;
+    margin-top:12px;
+    width:min(980px, 100%);
+   }
+
+   .characterList{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+    margin-top:10px;
+   }
+
+   .charCard{
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.06);
+    padding:12px 12px;
+    cursor:pointer;
+    user-select:none;
+    transition:transform .06s ease, background .12s ease, border-color .12s ease;
+   }
+   .charCard:hover{
+    background:rgba(255,255,255,0.10);
+    border-color:rgba(255,255,255,0.24);
+   }
+   .charCard.selected{
+    border-color:rgba(255,255,255,0.40);
+    background:rgba(255,255,255,0.14);
+    transform:translateY(-1px);
+   }
+   .charNameRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:6px;
+   }
+   .charName{
+    font-size:18px;
+    color:#fff;
+    font-weight:700;
+   }
+   .charSwatch{
+    width:16px;
+    height:16px;
+    border-radius:5px;
+    border:1px solid rgba(255,255,255,0.25);
+   }
+   .charStats{
+    font-size:13px;
+    color:#d0d0d0;
+    line-height:1.35;
+   }
+
+   .characterPreview{
+    margin:8px 0 2px 0;
+    padding:12px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.25);
+    color:#ddd;
+    font-size:14px;
+    min-height:72px;
+   }
+
+   .shopBalance{
+    margin:6px 0 12px 0;
+    text-align:center;
+    color:#ddd;
+    font-size:16px;
+   }
+
+   .shopList{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+    margin-top:10px;
+    width:min(980px, 100%);
+   }
+
+   .shopItem{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.06);
+   }
+   .shopItemLeft{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+   }
+   .shopItemName{
+    color:#fff;
+    font-weight:700;
+    font-size:16px;
+   }
+   .shopItemDesc{
+    color:#cfcfcf;
+    font-size:13px;
+   }
+   .shopItemCost{
+    color:#ffd54f;
+    font-weight:700;
+    font-size:14px;
+    margin-right:8px;
+    white-space:nowrap;
+   }
+
+   .controlsList{
+    display:grid;
+    gap:10px;
+    margin-top:8px;
+    width:min(980px, 100%);
+   }
+
+   .controlsRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.06);
+    color:#ddd;
+    font-size:15px;
+   }
+   .controlsRow strong{
+    color:#fff;
+    font-size:16px;
+   }
+
+   .menuLabel{
+    color:#ddd;
+    font-size:16px;
+    margin-top:8px;
+   }
+
+   #menuSettings .settingsSectionTitle:first-of-type{
+    margin-top:0;
+   }
+   .settingsSectionTitle{
+    margin:20px auto 8px auto;
+    max-width:640px;
+    width:100%;
+    font-size:20px;
+    font-weight:700;
+    color:#fff;
+    text-align:left;
+   }
+   .settingsHelp{
+    text-align:left;
+    line-height:1.5;
+   }
+   .settingsHelp code{
+    font-size:0.9em;
+    color:#c5e1ff;
+    background:rgba(0,0,0,0.35);
+    padding:1px 6px;
+    border-radius:4px;
+   }
+   .settingsServerRow{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+    max-width:640px;
+    width:100%;
+    margin:8px auto 12px auto;
+   }
+   .settingsServerRow .menuInput{
+    flex:1;
+    min-width:0;
+   }
+   .settingsServerRow .secondary{
+    flex-shrink:0;
+    align-self:stretch;
+   }
+
+   .settingsToggleRow{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    max-width:640px;
+    margin:0 auto 20px auto;
+    padding:14px 16px;
+    text-align:left;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.28);
+    color:#e8e8f0;
+    font-size:16px;
+    line-height:1.4;
+    cursor:pointer;
+    user-select:none;
+   }
+   .settingsToggleRow input{
+    width:18px;
+    height:18px;
+    margin-top:3px;
+    flex-shrink:0;
+    cursor:pointer;
+   }
+
+   .menuInput, .menuSelect{
+    width:100%;
+    box-sizing:border-box;
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.16);
+    background:rgba(0,0,0,0.35);
+    color:#fff;
+    font-size:16px;
+    outline:none;
+   }
+   .menuInput:focus, .menuSelect:focus{
+    border-color:rgba(130,190,255,0.55);
+    box-shadow:0 0 0 3px rgba(100,160,255,0.15);
+   }
+   
+   .dmg {
+    position:absolute;
+    color:red;
+    font-size:24px;
+    animation:float 1s forwards;
+   }
+   @keyframes float {
+    0%{opacity:1;}
+    100%{opacity:0; transform:translateY(-60px);}
+   }
+
+   /* Online lobby */
+   #menuOnline .onlineLobbyWrap{
+    width:min(1040px, 100%);
+    text-align:left;
+    margin:0 auto;
+   }
+
+   #menuOnline .onlineLobbyActions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:flex-start;
+   }
+
+   #menuOnline .onlineLobbyStatus{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.25);
+    color:#ccc;
+    font-size:14px;
+    min-height:20px;
+   }
+   #menuOnline .onlineLobbyStatus.ok{
+    border-color:rgba(80,220,120,0.35);
+    color:#d8f5e4;
+   }
+   #menuOnline .onlineLobbyStatus.warn{
+    border-color:rgba(255,200,80,0.35);
+    color:#ffe8c4;
+   }
+   #menuOnline .onlineLobbyStatus.bad{
+    border-color:rgba(255,100,100,0.35);
+    color:#ffd6d6;
+   }
+
+   #menuOnline .onlineLobbyListBlock{
+    margin-top:14px;
+   }
+
+   #menuOnline .onlineLobbyPanel{
+    padding:12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(255,255,255,0.04);
+   }
+   #menuOnline .onlineLobbyPanelList{
+    min-height:280px;
+    display:flex;
+    flex-direction:column;
+   }
+
+   #menuOnline .onlineRoomList{
+    margin-top:8px;
+    flex:1;
+    max-height:min(480px, 52vh);
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding-right:4px;
+   }
+
+   #menuOnline .onlineRoomEmpty{
+    color:#999;
+    font-size:14px;
+    padding:8px 4px;
+    line-height:1.4;
+   }
+
+   #menuOnline .onlineRoomRow{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.2);
+   }
+   #menuOnline .onlineRoomRow button{
+    flex-shrink:0;
+   }
+   #menuOnline .onlineRoomId{
+    font-weight:700;
+    color:#fff;
+    font-size:15px;
+    word-break:break-all;
+   }
+   #menuOnline .onlineRoomMeta{
+    font-size:13px;
+    color:#bbb;
+    margin-top:2px;
+   }
+
+   .onlineRoomHint{
+    margin-top:10px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid rgba(120,200,255,0.25);
+    background:rgba(0,40,80,0.35);
+    color:#cfe8ff;
+    font-size:14px;
+    text-align:left;
+    line-height:1.4;
+   }
+
+   /* —— Online in-game chat (Fight + Results) —— */
+   #onlineChatPanel{
+    position:absolute;
+    left:14px;
+    bottom:14px;
+    z-index:320;
+    font-family:var(--font-sans);
+    max-width:min(440px, 94vw);
+    pointer-events:auto;
+   }
+
+   .onlineChatTopRow{
+    display:flex;
+    align-items:flex-end;
+    gap:0;
+    width:100%;
+   }
+
+   .onlineChatMessages,
+   #menuOnline .onlineRoomList{
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,0.22) rgba(0,0,0,0.25);
+   }
+   .onlineChatMessages::-webkit-scrollbar,
+   #menuOnline .onlineRoomList::-webkit-scrollbar{
+    width:8px;
+   }
+   .onlineChatMessages::-webkit-scrollbar-thumb,
+   #menuOnline .onlineRoomList::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,0.18);
+    border-radius:8px;
+   }
+   .onlineChatMessages::-webkit-scrollbar-track,
+   #menuOnline .onlineRoomList::-webkit-scrollbar-track{
+    background:rgba(0,0,0,0.2);
+   }
+   .onlineChatToggle{
+    display:block;
+    flex:1;
+    min-width:0;
+    padding:8px 14px;
+    border-radius:10px 0 0 0;
+    border:1px solid rgba(255,255,255,0.2);
+    border-right:none;
+    border-bottom:none;
+    background:rgba(12,12,18,0.92);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 -2px 14px rgba(0,0,0,0.35);
+   }
+   .onlineChatToggle:hover{
+    background:rgba(28,28,36,0.95);
+   }
+
+   .onlineForfeitBtn{
+    flex-shrink:0;
+    padding:8px 14px;
+    border-radius:0 10px 0 0;
+    border:1px solid rgba(255,100,100,0.45);
+    border-bottom:none;
+    background:linear-gradient(180deg, rgba(200,40,50,0.95), rgba(140,20,30,0.92));
+    color:#ffe8e8;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    box-shadow:0 -2px 14px rgba(0,0,0,0.35);
+    transition:filter .12s ease, border-color .12s ease;
+   }
+   .onlineForfeitBtn:hover:not(:disabled){
+    filter:brightness(1.08);
+    border-color:rgba(255,140,140,0.65);
+   }
+   .onlineForfeitBtn:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+    filter:grayscale(0.3);
+   }
+   .onlineForfeitBtn:focus-visible{
+    outline:2px solid rgba(255,160,160,0.9);
+    outline-offset:2px;
+   }
+
+   .onlineChatBody{
+    flex-direction:column;
+    width:100%;
+    max-width:min(380px, 90vw);
+    max-height:min(340px, 42vh);
+    border-radius:0 0 12px 12px;
+    border:1px solid rgba(255,255,255,0.18);
+    background:rgba(10,10,14,0.94);
+    box-shadow:0 8px 28px rgba(0,0,0,0.45);
+    overflow:hidden;
+   }
+   .onlineChatRosterLabel{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:#888;
+    padding:10px 12px 0 12px;
+   }
+   .onlineChatRoster{
+    padding:6px 12px 10px 12px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    font-size:13px;
+    color:#ddd;
+   }
+   .onlineChatRosterBlock + .onlineChatRosterBlock{
+    margin-top:8px;
+   }
+   .onlineChatRosterRow{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    flex-wrap:wrap;
+   }
+   .onlineChatRosterName{
+    font-weight:700;
+    color:#fff;
+   }
+   .onlineChatRosterYou{
+    font-size:11px;
+    color:#888;
+  }
+   .onlineChatRosterStatus{
+    margin-top:2px;
+    font-size:12px;
+  }
+   .onlineChatConn.ok{ color:#69f0ae; }
+   .onlineChatConn.bad{ color:#ff8a80; }
+
+   .onlineChatMessages{
+    flex:1;
+    min-height:100px;
+    max-height:180px;
+    overflow-y:auto;
+    padding:8px 10px;
+    font-size:13px;
+    line-height:1.35;
+    color:#e8e8e8;
+   }
+   .onlineChatLine{
+    margin-bottom:6px;
+    word-wrap:break-word;
+   }
+   .onlineChatLine.sys{
+    color:#90caf9;
+    font-style:italic;
+    font-size:12px;
+   }
+   .onlineChatLine.msg .onlineChatFrom{
+    font-weight:700;
+    color:#ffe082;
+  }
+   .onlineChatInputRow{
+    display:flex;
+    gap:6px;
+    padding:8px 10px 10px 10px;
+    border-top:1px solid rgba(255,255,255,0.08);
+    background:rgba(0,0,0,0.25);
+   }
+   .onlineChatInput{
+    flex:1;
+    min-width:0;
+    padding:8px 10px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.06);
+    color:#fff;
+    font-size:14px;
+   }
+   .onlineChatSend{
+    flex-shrink:0;
+    padding:8px 14px;
+    border-radius:8px;
+    border:1px solid rgba(255,224,130,0.35);
+    background:rgba(255,224,130,0.12);
+    color:#ffe082;
+    font-weight:700;
+    cursor:pointer;
+    font-size:14px;
+   }
+   .onlineChatSend:hover{
+    background:rgba(255,224,130,0.22);
+   }

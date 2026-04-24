@@ -1,0 +1,12 @@
+{
+  "name": "valination-fighter-game",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "netplay-server": "node server/netplay-server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}
+

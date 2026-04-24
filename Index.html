@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Valination Ultimate</title>
+<link rel="stylesheet" href="style.css">
+<!--
+  Live site: https://valination.netlify.app/ (HTTPS). Netlify only hosts static files — it does not run the Node netplay server.
+  For online multiplayer, deploy your WebSocket server with TLS and point the game at wss://… using either:
+  (1) Uncomment one line below, or (2) In-game Settings → "Game server WebSocket URL" for each device.
+<script>window.NETPLAY_SERVER = "wss://YOUR-NETPLAY-HOST.example.com";</script>
+-->
+</head>
+
+<body>
+<div id="game">
+    <canvas id="canvas" width="1920" height="1080"></canvas>
+
+    <!-- Online: both players must be in the match before a 5s countdown ends -->
+    <div id="onlineWaitingOverlay" class="onlineWaitingOverlay" style="display:none;" aria-live="polite">
+        <h1 id="onlineWaitingTitle" class="onlineWaitingTitle">Waiting for opponent</h1>
+        <p id="onlineWaitingSub" class="onlineWaitingSub"></p>
+        <div id="onlineCountdownBig" class="onlineCountdownBig"></div>
+    </div>
+
+    <!-- UI -->
+    <div id="announcer"></div>
+    <div id="combo"></div>
+
+    <!-- BARS -->
+    <div id="bars">
+        <div class="bar"><div id="hp" class="fill"></div></div>
+        <div class="bar"><div id="energy" class="fill energy"></div></div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="overlay">
+        <div class="overlayCard">
+            <h1 id="result" class="resultTitle"></h1>
+            <div id="resultStats" class="resultStats"></div>
+            <div id="rematchPanel" class="rematchPanel" style="display:none;">
+                <p id="rematchStatus" class="rematchStatus"></p>
+                <div id="rematchAcceptRow" class="menuButtons" style="display:none;">
+                    <button id="btnRematchAccept" type="button">Accept rematch</button>
+                    <button id="btnRematchDecline" type="button" class="secondary">Decline</button>
+                </div>
+            </div>
+            <div class="menuButtons overlayActions">
+                <button id="btnRetry" type="button">Retry</button>
+                <button id="btnBackToMenu" type="button">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="onlineChatPanel" class="onlineChatPanel" style="display:none;" aria-label="Online match chat">
+        <div class="onlineChatTopRow">
+            <button type="button" id="onlineChatToggle" class="onlineChatToggle" aria-expanded="false" aria-controls="onlineChatBody">Chat</button>
+            <button type="button" id="onlineForfeitBtn" class="onlineForfeitBtn" title="Give up this match">Forfeit</button>
+        </div>
+        <div id="onlineChatBody" class="onlineChatBody" style="display:none;">
+            <div class="onlineChatRosterLabel">Players</div>
+            <div id="onlineChatRoster" class="onlineChatRoster"></div>
+            <div id="onlineChatMessages" class="onlineChatMessages"></div>
+            <div class="onlineChatInputRow">
+                <input id="onlineChatInput" class="onlineChatInput" type="text" maxlength="280" placeholder="Message…" autocomplete="off" />
+                <button type="button" id="onlineChatSend" class="onlineChatSend">Send</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MENUS (outside scaled game so it covers full screen) -->
+<div id="menuRoot" class="menuOverlay">
+    <!-- MAIN MENU -->
+    <section id="menuMain" class="menuScreen">
+        <img class="menuGameLogo" src="assets/valigame.png" alt="Valigame" draggable="false" />
+        <div id="mainStats" class="mainStats"></div>
+        <div class="menuButtons">
+            <button id="btnPlay" type="button">Play</button>
+            <button id="btnShop" type="button">Shop</button>
+            <button id="btnStats" type="button">Stats</button>
+            <button id="btnControls" type="button">Controls</button>
+            <button id="btnSettings" type="button">Settings</button>
+            <button id="btnCredits" type="button" disabled>Credits</button>
+        </div>
+    </section>
+
+    <!-- MODE SELECT -->
+    <section id="menuMode" class="menuScreen">
+        <h2 class="menuHeader">Select Mode</h2>
+        <div class="menuButtons">
+            <button id="btnModePvB" type="button">Player vs Bot</button>
+            <button id="btnModeOnline" type="button">Online Multiplayer</button>
+            <button id="btnModeBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+
+    <!-- ONLINE LOBBY (live room list — server is set in core/netplayConfig.js or window.NETPLAY_SERVER) -->
+    <section id="menuOnline" class="menuScreen" style="display:none;">
+        <h2 class="menuHeader">Online</h2>
+        <p class="menuSubtitle" style="max-width:640px;margin:0 auto 12px auto;">
+            Create a room, join an open one from the list, or use quick match.
+        </p>
+        <div class="onlineLobbyWrap">
+            <div class="onlineLobbyActions">
+                <button id="btnOnlineCreateRoom" type="button">Create room</button>
+                <button id="btnOnlineMatchmake" type="button" class="secondary">Quick match</button>
+                <button id="btnOnlineRefresh" type="button" class="secondary">Refresh list</button>
+            </div>
+            <div id="onlineLobbyStatus" class="onlineLobbyStatus" role="status"></div>
+            <div class="onlineLobbyPanel onlineLobbyPanelList onlineLobbyListBlock">
+                <div class="menuLabel">Open rooms — join a host who is waiting</div>
+                <div id="onlineRoomList" class="onlineRoomList"></div>
+            </div>
+            <div class="menuButtons">
+                <button id="btnOnlineLobbyBack" type="button" class="secondary">Back</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHARACTER SELECT (v1 simple) -->
+    <section id="menuCharacter" class="menuScreen">
+        <h2 class="menuHeader">Character Select</h2>
+        <div class="menuGrid">
+            <div>
+                <div class="menuLabel">Choose your fighter</div>
+                <div id="characterList" class="characterList"></div>
+            </div>
+
+            <div>
+                <div class="menuLabel">Loadout</div>
+                <div class="menuForm">
+                    <label class="menuLabel" for="playerName">Player name</label>
+                    <input id="playerName" class="menuInput" type="text" maxlength="16" value="Player" />
+
+                    <div id="characterPreview" class="characterPreview"></div>
+                    <p id="onlineRoomHint" class="onlineRoomHint" style="display:none;" aria-live="polite"></p>
+                </div>
+            </div>
+        </div>
+        <div class="menuButtons">
+            <button id="btnStartMatch" type="button">Start Match</button>
+            <button id="btnCharBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="menuShop" class="menuScreen">
+        <h2 class="menuHeader">Shop</h2>
+        <div id="shopBalance" class="shopBalance"></div>
+        <div id="shopList" class="shopList"></div>
+        <div class="menuButtons">
+            <button id="btnShopBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+
+    <!-- CONTROLS -->
+    <section id="menuControls" class="menuScreen">
+        <h2 class="menuHeader">Controls</h2>
+        <div class="controlsList">
+            <div class="controlsRow"><span>Move Left</span><strong>A</strong></div>
+            <div class="controlsRow"><span>Move Right</span><strong>D</strong></div>
+            <div class="controlsRow"><span>Jump</span><strong>W</strong></div>
+            <div class="controlsRow"><span>Light Attack</span><strong>J</strong></div>
+            <div class="controlsRow"><span>Special Ability</span><strong>K</strong></div>
+        </div>
+        <div class="menuButtons">
+            <button id="btnControlsBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="menuSettings" class="menuScreen" style="display:none;">
+        <h2 class="menuHeader">Settings</h2>
+        <h3 class="settingsSectionTitle">Online multiplayer</h3>
+        <p class="menuSubtitle settingsHelp">
+            Static hosting (GitHub Pages, Netlify, itch.io embedded web, etc.) serves your game over <strong>HTTPS</strong>.
+            Browsers then <strong>block</strong> plain <code>ws://</code> as mixed content — you need a public <code>wss://</code> WebSocket server (TLS).
+            There is no “allow connect” permission to toggle; use the URL field below (or <code>window.NETPLAY_SERVER</code>) with <strong>wss://your-server…</strong>.
+            For local testing only, open the HTML over <code>http://</code> so <code>ws://localhost:8080</code> can work.
+        </p>
+        <label class="menuLabel" for="settingNetplayServerUrl">Game server WebSocket URL (optional)</label>
+        <div class="settingsServerRow">
+            <input id="settingNetplayServerUrl" class="menuInput" type="text" maxlength="512" placeholder="e.g. ws://192.168.1.10:8080 or wss://your.host:443" autocomplete="off" />
+            <button type="button" id="btnClearNetplayServerUrl" class="secondary">Clear</button>
+        </div>
+        <p class="menuSubtitle settingsHelp">Leave blank to use <code>window.NETPLAY_SERVER</code> (if set) or the game default. Changing this applies the next time you open Online or start a match.</p>
+
+        <h3 class="settingsSectionTitle">In-match display</h3>
+        <label class="settingsToggleRow" for="settingShowOnlineWaitingOverlay">
+            <input id="settingShowOnlineWaitingOverlay" type="checkbox" />
+            <span>Show full-screen overlay while connecting / waiting for online match</span>
+        </label>
+        <div class="menuButtons">
+            <button id="btnSettingsBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+
+    <!-- STATS -->
+    <section id="menuStats" class="menuScreen">
+        <h2 class="menuHeader">Player Stats</h2>
+        <div id="statsOverview" class="shopBalance"></div>
+        <div id="statsList" class="controlsList"></div>
+        <div class="menuButtons">
+            <button id="btnStatsBack" type="button" class="secondary">Back</button>
+        </div>
+    </section>
+</div>
+
+<script src="core/state.js"></script>
+<script src="core/input.js"></script>
+<script src="systems/save.js"></script>
+<script src="systems/effects.js"></script>
+<script src="systems/ui.js"></script>
+<script src="systems/combat.js"></script>
+<script src="systems/progression.js"></script>
+<script src="core/netplayConfig.js"></script>
+<script src="systems/netplay.js"></script>
+<script src="systems/onlineChat.js"></script>
+<script src="entities/player.js"></script>
+<script src="entities/enemy.js"></script>
+<script src="core/game.js"></script>
+<script src="core/characters.js"></script>
+<script src="core/shopData.js"></script>
+<script src="core/scene.js"></script>
+<script src="scenes/mainMenu.js"></script>
+<script src="scenes/modeSelect.js"></script>
+<script src="scenes/onlineLobby.js"></script>
+<script src="scenes/characterSelect.js"></script>
+<script src="scenes/shop.js"></script>
+<script src="scenes/controls.js"></script>
+<script src="scenes/settings.js"></script>
+<script src="scenes/stats.js"></script>
+<script src="scenes/fight.js"></script>
+<script src="scenes/results.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

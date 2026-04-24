@@ -1,0 +1,3 @@
+const State = {
+    current: "fight"
+   };
