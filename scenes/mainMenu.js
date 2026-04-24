@@ -12,7 +12,6 @@ Scene.register("MainMenu", {
     const controls = document.getElementById("menuControls");
     const statsMenu = document.getElementById("menuStats");
     const onlineMenu = document.getElementById("menuOnline");
-    const settingsMenu = document.getElementById("menuSettings");
 
     root.style.display = "flex";
     main.style.display = "flex";
@@ -22,7 +21,6 @@ Scene.register("MainMenu", {
     if (controls) controls.style.display = "none";
     if (statsMenu) statsMenu.style.display = "none";
     if (onlineMenu) onlineMenu.style.display = "none";
-    if (settingsMenu) settingsMenu.style.display = "none";
 
     document.getElementById("overlay").style.display = "none";
     const bars = document.getElementById("bars");
@@ -44,9 +42,6 @@ Scene.register("MainMenu", {
 
     const btnControls = document.getElementById("btnControls");
     if(btnControls) btnControls.onclick = () => Scene.set("Controls");
-
-    const btnSettings = document.getElementById("btnSettings");
-    if(btnSettings) btnSettings.onclick = () => Scene.set("Settings");
   },
 });
 

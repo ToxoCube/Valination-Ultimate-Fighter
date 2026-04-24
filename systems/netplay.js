@@ -99,7 +99,7 @@ const Netplay = {
       : null;
 
     if (!this.serverUrl) {
-      onError?.("No game server configured (set URL in Settings, window.NETPLAY_SERVER, or netplayConfig).");
+      onError?.("No game server configured (set window.NETPLAY_SERVER in Index.html or core/netplayConfig.js).");
       return;
     }
 

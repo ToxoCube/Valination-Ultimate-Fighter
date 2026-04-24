@@ -8,7 +8,6 @@ Scene.register("ModeSelect", {
     const controls = document.getElementById("menuControls");
     const stats = document.getElementById("menuStats");
     const online = document.getElementById("menuOnline");
-    const settingsMenu = document.getElementById("menuSettings");
 
     root.style.display = "flex";
     main.style.display = "none";
@@ -18,7 +17,6 @@ Scene.register("ModeSelect", {
     if (controls) controls.style.display = "none";
     if (stats) stats.style.display = "none";
     if (online) online.style.display = "none";
-    if (settingsMenu) settingsMenu.style.display = "none";
 
     document.getElementById("btnModePvB").onclick = () => Scene.set("CharacterSelect", { mode: "pvb" });
     document.getElementById("btnModeOnline").onclick = () => Scene.set("OnlineLobby");

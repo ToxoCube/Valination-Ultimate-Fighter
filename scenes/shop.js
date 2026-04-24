@@ -8,7 +8,6 @@ Scene.register("Shop", {
     const controls = document.getElementById("menuControls");
     const stats = document.getElementById("menuStats");
     const onlineMenu = document.getElementById("menuOnline");
-    const settingsMenu = document.getElementById("menuSettings");
 
     root.style.display = "flex";
     main.style.display = "none";
@@ -18,7 +17,6 @@ Scene.register("Shop", {
     if (controls) controls.style.display = "none";
     if (stats) stats.style.display = "none";
     if (onlineMenu) onlineMenu.style.display = "none";
-    if (settingsMenu) settingsMenu.style.display = "none";
 
     const upgrades = ShopData.upgrades;
 

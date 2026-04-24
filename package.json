@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
+    "start": "node server/netplay-server.js",
     "netplay-server": "node server/netplay-server.js"
   },
   "dependencies": {

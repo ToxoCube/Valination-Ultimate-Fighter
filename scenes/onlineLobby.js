@@ -41,7 +41,6 @@
       const controls = document.getElementById("menuControls");
       const stats = document.getElementById("menuStats");
       const online = document.getElementById("menuOnline");
-      const settingsMenu = document.getElementById("menuSettings");
 
       root.style.display = "flex";
       main.style.display = "none";
@@ -51,7 +50,6 @@
       if (controls) controls.style.display = "none";
       if (stats) stats.style.display = "none";
       if (online) online.style.display = "flex";
-      if (settingsMenu) settingsMenu.style.display = "none";
 
       const statusEl = document.getElementById("onlineLobbyStatus");
       const roomListEl = document.getElementById("onlineRoomList");

@@ -4,11 +4,7 @@ const Save = (() => {
      xp:0,
      level:1,
      upgrades:{},
-     xpToLevel:100,
-     /** When false, online Fight does not use the full-screen connecting / waiting overlay (arena stays visible). */
-     showOnlineWaitingOverlay:true,
-     /** Optional WebSocket URL (ws:// or wss://) — overrides default / window.NETPLAY_SERVER when non-empty. */
-     netplayServerUrl:""
+     xpToLevel:100
     };
 
     function sanitizeMerged(d){
@@ -19,14 +15,6 @@ const Save = (() => {
      out.level = Math.max(1, Math.floor(Number(out.level)) || 1);
      // xpToLevel must stay >= 1 or Progression.reward() can infinite-loop on win
      out.xpToLevel = Math.max(1, Math.floor(Number(out.xpToLevel)) || defaults.xpToLevel);
-     out.showOnlineWaitingOverlay =
-      out.showOnlineWaitingOverlay === undefined || out.showOnlineWaitingOverlay === null
-       ? defaults.showOnlineWaitingOverlay
-       : !!out.showOnlineWaitingOverlay;
-     out.netplayServerUrl =
-      typeof out.netplayServerUrl === "string"
-       ? out.netplayServerUrl.trim().slice(0, 512)
-       : "";
      return out;
     }
 

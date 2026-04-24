@@ -307,5 +307,12 @@ wss.on("connection", (ws) => {
   });
 });
 
-console.log(`Netplay server listening on ws://localhost:${port}`);
-console.log(`Lobby: clients subscribe for live open-room list; games use join/matchmake on a separate socket.`);
+const publicUrl =
+  typeof process.env.RENDER_EXTERNAL_URL === "string" && process.env.RENDER_EXTERNAL_URL.trim()
+    ? process.env.RENDER_EXTERNAL_URL.trim().replace(/^http:\/\//i, "https://")
+    : "";
+const wssHint = publicUrl
+  ? ` Clients (e.g. Netlify): use ${publicUrl.replace(/^https:/i, "wss:")}`
+  : " Clients: use wss://YOUR_PUBLIC_HOST (same port your host exposes — not ws://localhost from a browser).";
+console.log(`Netplay server listening on port ${port} (inside this machine).${wssHint}`);
+console.log(`Lobby: clients subscribe for live open-room list; games use join/matchmake on the same WebSocket.`);

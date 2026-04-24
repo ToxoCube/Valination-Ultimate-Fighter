@@ -22,10 +22,6 @@ const UI = {
       wrap.style.display = "none";
       return;
      }
-     if(typeof Save !== "undefined" && Save.data && Save.data.showOnlineWaitingOverlay === false){
-      wrap.style.display = "none";
-      return;
-     }
      if(!Netplay.connected){
       wrap.style.display = "flex";
       const t = document.getElementById("onlineWaitingTitle");
